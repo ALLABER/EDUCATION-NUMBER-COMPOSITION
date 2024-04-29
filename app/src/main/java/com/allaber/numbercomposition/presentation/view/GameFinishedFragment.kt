@@ -8,6 +8,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.allaber.numbercomposition.R
 import com.allaber.numbercomposition.databinding.FragmentGameFinishedBinding
 import com.allaber.numbercomposition.domain.entity.GameResult
 import com.allaber.numbercomposition.presentation.view.GameFragment.Companion.GAME_FRAGMENT_NAME
@@ -36,6 +37,49 @@ class GameFinishedFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setClickListeners()
+        bindViews()
+    }
+
+    private fun bindViews() {
+        with(binding) {
+            emojiResult.setImageResource(getSmileResId())
+            tvRequiredAnswers.text = String.format(
+                getString(R.string.required_score),
+                gameResult.gameSettings.minPercentOfRightAnswers
+            )
+            tvScoreAnswers.text = String.format(
+                getString(R.string.score_answers),
+                gameResult.countOfRightAnswers
+            )
+            tvRequiredPercentage.text = String.format(
+                getString(R.string.required_percentage),
+                gameResult.gameSettings.minPercentOfRightAnswers
+            )
+            tvScorePercentage.text = String.format(
+                getString(R.string.score_percentage),
+                getPercentOfRightAnswers()
+            )
+        }
+    }
+
+    private fun getPercentOfRightAnswers() = with(gameResult) {
+        if (countOfQuestion == 0) {
+            0
+        } else {
+            ((countOfQuestion / countOfQuestion.toDouble()) * 100).toInt()
+        }
+    }
+
+    private fun getSmileResId(): Int {
+        return if (gameResult.winner) {
+            R.drawable.ic_smile
+        } else {
+            R.drawable.ic_sad
+        }
+    }
+
+    private fun setClickListeners() {
         requireActivity().onBackPressedDispatcher
             .addCallback(
                 viewLifecycleOwner,
@@ -53,7 +97,9 @@ class GameFinishedFragment : Fragment() {
     }
 
     private fun parseArgs() {
-        gameResult = requireArguments().getSerializable(GAME_RESULT_KEY) as GameResult
+        requireArguments().getParcelable<GameResult>(GAME_RESULT_KEY)?.let {
+            gameResult = it
+        }
     }
 
     private fun retryGame() {
